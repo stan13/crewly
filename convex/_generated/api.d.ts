@@ -16,6 +16,7 @@ import type {
 import type * as accountLinks from "../accountLinks.js";
 import type * as auth from "../auth.js";
 import type * as boatSessions from "../boatSessions.js";
+import type * as boats from "../boats.js";
 import type * as contacts from "../contacts.js";
 import type * as http from "../http.js";
 import type * as router from "../router.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   accountLinks: typeof accountLinks;
   auth: typeof auth;
   boatSessions: typeof boatSessions;
+  boats: typeof boats;
   contacts: typeof contacts;
   http: typeof http;
   router: typeof router;

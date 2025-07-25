@@ -272,6 +272,57 @@ export const getUserLocation = query({
   },
 });
 
+export const updateUserTheme = mutation({
+  args: {
+    theme: v.union(v.literal("light"), v.literal("dark")),
+  },
+  handler: async (ctx, { theme }) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("Not authenticated");
+    }
+
+    const userId = identity.subject;
+    
+    // Check if user settings record exists
+    const existingSettings = await ctx.db
+      .query("userSettings")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    
+    if (existingSettings) {
+      // Update existing settings
+      await ctx.db.patch(existingSettings._id, { theme });
+    } else {
+      // Create new settings record
+      await ctx.db.insert("userSettings", {
+        userId,
+        theme,
+      });
+    }
+    
+    return { success: true };
+  },
+});
+
+export const getUserTheme = query({
+  args: {},
+  handler: async (ctx) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      return "light"; // default
+    }
+
+    const userId = identity.subject;
+    const settings = await ctx.db
+      .query("userSettings")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+    
+    return settings?.theme || "light";
+  },
+});
+
 function getGoogleWeatherIcon(condition?: string): string {
   if (!condition) return '⛅';
   

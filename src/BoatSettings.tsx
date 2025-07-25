@@ -1,0 +1,196 @@
+import { useState } from "react";
+import { useQuery, useMutation } from "convex/react";
+import { api } from "../convex/_generated/api";
+import { Id } from "../convex/_generated/dataModel";
+
+interface BoatSettingsProps {
+  isOpen: boolean;
+  boatId: Id<"boats"> | null;
+  onClose: () => void;
+}
+
+export function BoatSettings({ isOpen, boatId, onClose }: BoatSettingsProps) {
+  const [email, setEmail] = useState("");
+  const [inviting, setInviting] = useState(false);
+
+  const boatMembers = useQuery(api.boats.getBoatMembers, boatId ? { boatId } : "skip");
+  const pendingInvites = useQuery(api.boats.getPendingInvites);
+  const inviteUser = useMutation(api.boats.inviteUserToBoat);
+  const acceptInvite = useMutation(api.boats.acceptBoatInvite);
+  const declineInvite = useMutation(api.boats.declineBoatInvite);
+
+  const handleInviteUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!boatId || !email.trim()) return;
+
+    setInviting(true);
+    try {
+      await inviteUser({ boatId, email: email.trim() });
+      setEmail("");
+    } catch (error) {
+      console.error("Failed to invite user:", error);
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleAcceptInvite = async (inviteId: Id<"boatInvites">) => {
+    try {
+      await acceptInvite({ inviteId });
+    } catch (error) {
+      console.error("Failed to accept invite:", error);
+    }
+  };
+
+  const handleDeclineInvite = async (inviteId: Id<"boatInvites">) => {
+    try {
+      await declineInvite({ inviteId });
+    } catch (error) {
+      console.error("Failed to decline invite:", error);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg p-6 w-[600px] max-w-90vw max-h-90vh overflow-y-auto">
+        <div className="flex items-center justify-between mb-6">
+          <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+            ⚓ Boat Settings & Sharing
+          </h3>
+          <button
+            onClick={onClose}
+            className="text-gray-500 hover:text-gray-700 text-xl"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Pending Invites */}
+        {pendingInvites && pendingInvites.length > 0 && (
+          <div className="mb-6">
+            <h4 className="text-md font-medium text-gray-800 mb-3">
+              📬 Pending Invitations
+            </h4>
+            <div className="space-y-2">
+              {pendingInvites.map((invite) => (
+                <div
+                  key={invite._id}
+                  className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
+                >
+                  <div>
+                    <div className="font-medium text-gray-800">
+                      🚤 {invite.boat?.name}
+                    </div>
+                    <div className="text-sm text-gray-600">
+                      Invited by {invite.inviter?.name || invite.inviter?.email}
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => handleAcceptInvite(invite._id)}
+                      className="px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+                    >
+                      Accept
+                    </button>
+                    <button
+                      onClick={() => handleDeclineInvite(invite._id)}
+                      className="px-3 py-1 bg-red-600 text-white rounded text-sm hover:bg-red-700 transition-colors"
+                    >
+                      Decline
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {boatId && (
+          <>
+            {/* Invite New Member */}
+            <div className="mb-6">
+              <h4 className="text-md font-medium text-gray-800 mb-3">
+                ➕ Invite New Crew Member
+              </h4>
+              <form onSubmit={handleInviteUser} className="flex gap-3">
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="Enter email address..."
+                  className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={inviting}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                >
+                  {inviting ? "Inviting..." : "Invite"}
+                </button>
+              </form>
+              <p className="text-xs text-gray-500 mt-2">
+                They'll receive an invitation to join this boat and manage schedules together.
+              </p>
+            </div>
+
+            {/* Current Members */}
+            <div>
+              <h4 className="text-md font-medium text-gray-800 mb-3">
+                👥 Current Crew Members ({boatMembers?.length || 0})
+              </h4>
+              <div className="space-y-2">
+                {boatMembers?.map((member) => (
+                  <div
+                    key={member._id}
+                    className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
+                        {member.user?.name?.charAt(0) || member.user?.email?.charAt(0) || "?"}
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-800">
+                          {member.user?.name || member.user?.email}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {member.user?.email && member.user?.name && (
+                            <span>{member.user.email}</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs ${
+                          member.role === "owner"
+                            ? "bg-gold-100 text-gold-800 border border-gold-200"
+                            : "bg-blue-100 text-blue-800 border border-blue-200"
+                        }`}
+                      >
+                        {member.role === "owner" ? "⭐ Owner" : "👤 Member"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        <div className="mt-6 pt-4 border-t border-gray-200">
+          <div className="flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
