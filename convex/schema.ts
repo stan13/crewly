@@ -3,6 +3,14 @@ import { v } from "convex/values";
 import { authTables } from "@convex-dev/auth/server";
 
 const applicationTables = {
+  userSettings: defineTable({
+    userId: v.string(),
+    locationName: v.optional(v.string()),
+    latitude: v.optional(v.number()),
+    longitude: v.optional(v.number()),
+    temperatureUnit: v.optional(v.union(v.literal("fahrenheit"), v.literal("celsius"))),
+  }).index("by_user", ["userId"]),
+
   contacts: defineTable({
     name: v.string(),
     email: v.optional(v.string()),
