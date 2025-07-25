@@ -1,6 +1,7 @@
 import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
+import { Id } from "./_generated/dataModel";
 
 export const sendLinkRequest = mutation({
   args: {
@@ -163,9 +164,9 @@ export const getLinkedAccounts = query({
 
 export const getLinkedUserIds = query({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<Id<"users">[]> => {
     const userId = await getAuthUserId(ctx);
-    if (!userId) return [userId];
+    if (!userId) return [];
     
     const outgoingLinks = await ctx.db
       .query("accountLinks")
@@ -184,6 +185,6 @@ export const getLinkedUserIds = query({
       ...incomingLinks.map(link => link.fromUserId),
     ];
     
-    return [userId, ...linkedUserIds];
+    return [userId, ...linkedUserIds].filter((id): id is Id<"users"> => id !== null);
   },
 });

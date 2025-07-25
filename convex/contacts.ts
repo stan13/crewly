@@ -2,27 +2,27 @@ import { query, mutation } from "./_generated/server";
 import { v } from "convex/values";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { api } from "./_generated/api";
+import { Doc, Id } from "./_generated/dataModel";
 
 export const list = query({
   args: {},
-  handler: async (ctx) => {
+  handler: async (ctx): Promise<Array<Doc<"contacts">>> => {
     const userId = await getAuthUserId(ctx);
     if (!userId) return [];
     
     // Get linked user IDs
     const linkedUserIds = await ctx.runQuery(api.accountLinks.getLinkedUserIds);
+    if (!linkedUserIds) return [];
     
     // Get contacts for all linked users
-    const allContacts = [];
-    for (const linkedUserId of linkedUserIds) {
-      const contacts = await ctx.db
-        .query("contacts")
-        .withIndex("by_user", (q) => q.eq("userId", linkedUserId))
-        .collect();
-      allContacts.push(...contacts);
-    }
-    
-    return allContacts;
+    return await Promise.all(
+      linkedUserIds.map((linkedUserId) =>
+        ctx.db
+          .query("contacts")
+          .withIndex("by_user", (q) => q.eq("userId", linkedUserId))
+          .collect()
+      )
+    ).then((results) => results.flat());
   },
 });
 
