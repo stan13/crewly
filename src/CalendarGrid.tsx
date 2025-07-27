@@ -355,12 +355,12 @@ export function CalendarGrid({
             onDrop={(e) => onDrop(e, dateString)}
             onClick={(e) => handleDayClick(dateString, e)}
             className={`min-h-32 p-2 border-2 border-dashed rounded-lg transition-all duration-200 cursor-pointer ${
-              weather ? `${weatherBg} border-blue-200 dark:border-blue-700` :
-              'bg-white dark:bg-gray-800 border-gray-200 dark:border-blue-700'
-            } hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-lg hover:scale-[1.02] ${
-              isToday ? 'ring-2 ring-blue-500 dark:ring-blue-400 border-blue-400 dark:border-blue-500' : ''
+              weather ? `${weatherBg} border-blue-200 dark:border-gray-600` :
+              'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'
+            } hover:border-blue-400 dark:hover:border-gray-500 hover:shadow-lg hover:scale-[1.02] ${
+              isToday ? 'ring-2 ring-blue-500 dark:ring-blue-400 border-blue-400 dark:border-gray-500' : ''
             } ${
-              activeDate === dateString ? 'ring-2 ring-green-500 dark:ring-green-400 border-green-400 dark:border-green-500' : ''
+              activeDate === dateString ? 'ring-2 ring-green-500 dark:ring-green-400 border-green-400 dark:border-gray-500' : ''
             } hover:ring-1 hover:ring-green-300 dark:hover:ring-green-400`}
           >
             

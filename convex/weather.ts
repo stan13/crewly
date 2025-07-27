@@ -1,6 +1,7 @@
 import { query, mutation, action } from "./_generated/server";
 import { v } from "convex/values";
 import { api } from "./_generated/api";
+import { getAuthUserId } from "@convex-dev/auth/server";
 
 export const getWeatherBatch = action({
   args: {
@@ -165,12 +166,10 @@ export const updateUserLocation = mutation({
     longitude: v.number(),
   },
   handler: async (ctx, { locationName, latitude, longitude }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       throw new Error("Not authenticated");
     }
-
-    const userId = identity.subject;
     
     // Check if user settings record exists
     const existingSettings = await ctx.db
@@ -200,12 +199,10 @@ export const updateUserTemperatureUnit = mutation({
     temperatureUnit: v.union(v.literal("fahrenheit"), v.literal("celsius")),
   },
   handler: async (ctx, { temperatureUnit }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       throw new Error("Not authenticated");
     }
-
-    const userId = identity.subject;
     
     // Check if user settings record exists
     const existingSettings = await ctx.db
@@ -231,12 +228,10 @@ export const updateUserTemperatureUnit = mutation({
 export const getUserTemperatureUnit = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       return "fahrenheit"; // default
     }
-
-    const userId = identity.subject;
     const settings = await ctx.db
       .query("userSettings")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -249,12 +244,10 @@ export const getUserTemperatureUnit = query({
 export const getUserLocation = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       return null;
     }
-
-    const userId = identity.subject;
     const settings = await ctx.db
       .query("userSettings")
       .withIndex("by_user", (q) => q.eq("userId", userId))
@@ -277,12 +270,10 @@ export const updateUserTheme = mutation({
     theme: v.union(v.literal("light"), v.literal("dark")),
   },
   handler: async (ctx, { theme }) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       throw new Error("Not authenticated");
     }
-
-    const userId = identity.subject;
     
     // Check if user settings record exists
     const existingSettings = await ctx.db
@@ -308,12 +299,10 @@ export const updateUserTheme = mutation({
 export const getUserTheme = query({
   args: {},
   handler: async (ctx) => {
-    const identity = await ctx.auth.getUserIdentity();
-    if (!identity) {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
       return "light"; // default
     }
-
-    const userId = identity.subject;
     const settings = await ctx.db
       .query("userSettings")
       .withIndex("by_user", (q) => q.eq("userId", userId))
