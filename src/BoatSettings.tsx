@@ -18,6 +18,7 @@ export function BoatSettings({ isOpen, boatId, onClose }: BoatSettingsProps) {
   const currentUser = useQuery(api.auth.loggedInUser);
   const boatMembers = useQuery(api.boats.getBoatMembers, boatId ? { boatId } : "skip");
   const pendingInvites = useQuery(api.boats.getPendingInvites);
+  const outgoingInvites = useQuery(api.boats.getOutgoingInvites, boatId ? { boatId } : "skip");
   const inviteUser = useMutation(api.boats.inviteUserToBoat);
   const acceptInvite = useMutation(api.boats.acceptBoatInvite);
   const declineInvite = useMutation(api.boats.declineBoatInvite);
@@ -217,6 +218,42 @@ export function BoatSettings({ isOpen, boatId, onClose }: BoatSettingsProps) {
                 ))}
               </div>
             </div>
+
+            {/* Pending Outgoing Invites */}
+            {outgoingInvites && outgoingInvites.filter(invite => invite.status === "pending").length > 0 && (
+              <div className="mb-6">
+                <h4 className="text-md font-medium text-gray-800 mb-3">
+                  📤 Pending Invitations ({outgoingInvites.filter(invite => invite.status === "pending").length})
+                </h4>
+                <div className="space-y-2">
+                  {outgoingInvites.filter(invite => invite.status === "pending").map((invite) => (
+                    <div
+                      key={invite._id}
+                      className="flex items-center justify-between p-3 bg-yellow-50 border border-yellow-200 rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-yellow-500 text-white rounded-full flex items-center justify-center text-sm font-medium">
+                          @
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-800">
+                            {invite.email}
+                          </div>
+                          <div className="text-sm text-gray-600">
+                            Invited {new Date(invite.createdAt).toLocaleDateString()}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="px-2 py-1 rounded-full text-xs bg-yellow-100 text-yellow-800 border border-yellow-200">
+                          ⏳ Pending
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Delete Boat Section - Only for owners */}
             {currentUser && boatMembers?.find(m => m.role === "owner" && m.userId === currentUser._id) && (

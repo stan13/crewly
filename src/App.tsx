@@ -9,6 +9,8 @@ import { WeatherLocationModal } from "./WeatherLocationModal";
 import { ContactSidebar } from "./ContactSidebar";
 import { CalendarGrid } from "./CalendarGrid";
 import { BoatSettings } from "./BoatSettings";
+import { FirstTimeUserOnboarding } from "./FirstTimeUserOnboarding";
+import { PendingInvitesWelcome } from "./PendingInvitesWelcome";
 
 
 export default function App() {
@@ -31,9 +33,32 @@ export default function App() {
   const [showBoatDropdown, setShowBoatDropdown] = useState(false);
   const [showCreateBoat, setShowCreateBoat] = useState(false);
   const [showBoatSettings, setShowBoatSettings] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [showInvitesWelcome, setShowInvitesWelcome] = useState(false);
   const [newBoatName, setNewBoatName] = useState("");
 
   const weatherLocation = userLocation || { name: 'New York, NY', latitude: 40.7128, longitude: -74.0060 };
+
+  // Show onboarding for first-time users
+  useEffect(() => {
+    if (loggedInUser && userBoats !== undefined && pendingInvites !== undefined) {
+      if (userBoats.length === 0) {
+        // If user has pending invites, show invites welcome
+        if (pendingInvites.length > 0) {
+          setShowInvitesWelcome(true);
+          setShowOnboarding(false);
+        } else {
+          // If no boats and no invites, show regular onboarding
+          setShowOnboarding(true);
+          setShowInvitesWelcome(false);
+        }
+      } else {
+        // User has boats, don't show any onboarding
+        setShowOnboarding(false);
+        setShowInvitesWelcome(false);
+      }
+    }
+  }, [loggedInUser, userBoats, pendingInvites]);
 
   // Click-away to close dropdowns and modals
   useEffect(() => {
@@ -265,6 +290,21 @@ export default function App() {
         boatId={selectedBoat?._id || null}
         onClose={() => setShowBoatSettings(false)}
       />
+
+      {/* First Time User Onboarding */}
+      {showOnboarding && (
+        <FirstTimeUserOnboarding
+          onClose={() => setShowOnboarding(false)}
+        />
+      )}
+
+      {/* Pending Invites Welcome */}
+      {showInvitesWelcome && pendingInvites && (
+        <PendingInvitesWelcome
+          pendingInvites={pendingInvites}
+          onClose={() => setShowInvitesWelcome(false)}
+        />
+      )}
       
       <Toaster />
     </div>

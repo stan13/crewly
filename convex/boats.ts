@@ -156,14 +156,20 @@ export const inviteUserToBoat = mutation({
     if (!hasAccess) throw new Error("No permission to invite users to this boat");
 
     // Check if invite already exists
-    const existingInvite = await ctx.db
+    const existingInvites = await ctx.db
       .query("boatInvites")
       .withIndex("by_boat_and_email", (q) => q.eq("boatId", args.boatId).eq("email", args.email))
-      .first();
+      .collect();
 
-    if (existingInvite && existingInvite.status === "pending") {
+    // If there's already a pending invite, don't create another
+    const pendingInvite = existingInvites.find(invite => invite.status === "pending");
+    if (pendingInvite) {
       throw new Error("Invite already sent to this email");
     }
+
+    // Clean up any old declined invites for this boat/email combo to keep things tidy
+    const declinedInvites = existingInvites.filter(invite => invite.status === "declined");
+    await Promise.all(declinedInvites.map(invite => ctx.db.delete(invite._id)));
 
     // Check if user is already a member
     const targetUser = await ctx.db
@@ -221,6 +227,79 @@ export const getPendingInvites = query({
     );
 
     return invitesWithBoats;
+  },
+});
+
+// Get outgoing invites for boats the user owns/manages
+export const getOutgoingInvites = query({
+  args: {
+    boatId: v.optional(v.id("boats")),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) return [];
+
+    let boatIds: Id<"boats">[] = [];
+    
+    if (args.boatId) {
+      // Get invites for specific boat - verify user has access
+      const boat = await ctx.db.get(args.boatId);
+      if (!boat) return [];
+      
+      const hasAccess = 
+        boat.ownerId === userId ||
+        await ctx.db
+          .query("boatMembers")
+          .withIndex("by_boat_and_user", (q) => q.eq("boatId", args.boatId!).eq("userId", userId))
+          .first();
+      
+      if (!hasAccess) return [];
+      boatIds = [args.boatId];
+    } else {
+      // Get invites for all boats the user owns/manages
+      const ownedBoats = await ctx.db
+        .query("boats")
+        .withIndex("by_owner", (q) => q.eq("ownerId", userId))
+        .collect();
+      
+      const memberships = await ctx.db
+        .query("boatMembers")
+        .withIndex("by_user", (q) => q.eq("userId", userId))
+        .collect();
+      
+      const memberBoatIds = await Promise.all(
+        memberships.map(async (membership) => {
+          const boat = await ctx.db.get(membership.boatId);
+          return boat ? membership.boatId : null;
+        })
+      );
+      
+      boatIds = [...ownedBoats.map(b => b._id), ...memberBoatIds.filter(id => id !== null)];
+    }
+
+    // Get all invites for these boats where user was the inviter
+    const allInvites: any[] = [];
+    for (const boatId of boatIds) {
+      const invites = await ctx.db
+        .query("boatInvites")
+        .withIndex("by_boat", (q) => q.eq("boatId", boatId))
+        .filter((q) => q.eq(q.field("invitedBy"), userId))
+        .collect();
+      
+      const invitesWithBoatInfo = await Promise.all(
+        invites.map(async (invite) => {
+          const boat = await ctx.db.get(invite.boatId);
+          return {
+            ...invite,
+            boat,
+          };
+        })
+      );
+      
+      allInvites.push(...invitesWithBoatInfo);
+    }
+
+    return allInvites;
   },
 });
 
