@@ -322,3 +322,93 @@ export const getBoatMembers = query({
     return membersWithUsers;
   },
 });
+
+// Remove a member from a boat (owners only)
+export const removeBoatMember = mutation({
+  args: {
+    boatId: v.id("boats"),
+    memberId: v.id("boatMembers"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    // Verify user owns the boat
+    const boat = await ctx.db.get(args.boatId);
+    if (!boat || boat.ownerId !== userId) {
+      throw new Error("Only boat owners can remove members");
+    }
+
+    // Get the member to remove
+    const member = await ctx.db.get(args.memberId);
+    if (!member || member.boatId !== args.boatId) {
+      throw new Error("Member not found");
+    }
+
+    // Don't allow removing the owner
+    if (member.role === "owner") {
+      throw new Error("Cannot remove boat owner");
+    }
+
+    await ctx.db.delete(args.memberId);
+  },
+});
+
+// Delete a boat (owners only)
+export const deleteBoat = mutation({
+  args: {
+    boatId: v.id("boats"),
+  },
+  handler: async (ctx, args) => {
+    const userId = await getAuthUserId(ctx);
+    if (!userId) throw new Error("Not authenticated");
+
+    // Verify user owns the boat
+    const boat = await ctx.db.get(args.boatId);
+    if (!boat || boat.ownerId !== userId) {
+      throw new Error("Only boat owners can delete boats");
+    }
+
+    // Delete all related data
+    const members = await ctx.db
+      .query("boatMembers")
+      .withIndex("by_boat", (q) => q.eq("boatId", args.boatId))
+      .collect();
+
+    const invites = await ctx.db
+      .query("boatInvites")
+      .withIndex("by_boat", (q) => q.eq("boatId", args.boatId))
+      .collect();
+
+    const contacts = await ctx.db
+      .query("contacts")
+      .withIndex("by_boat", (q) => q.eq("boatId", args.boatId))
+      .collect();
+
+    const sessions = await ctx.db
+      .query("boatSessions")
+      .withIndex("by_boat", (q) => q.eq("boatId", args.boatId))
+      .collect();
+
+    // Delete all related records
+    await Promise.all([
+      ...members.map(member => ctx.db.delete(member._id)),
+      ...invites.map(invite => ctx.db.delete(invite._id)),
+      ...contacts.map(contact => ctx.db.delete(contact._id)),
+      ...sessions.map(session => ctx.db.delete(session._id)),
+    ]);
+
+    // Delete the boat itself
+    await ctx.db.delete(args.boatId);
+
+    // If this was the user's selected boat, clear the selection
+    const userSettings = await ctx.db
+      .query("userSettings")
+      .withIndex("by_user", (q) => q.eq("userId", userId))
+      .first();
+
+    if (userSettings?.selectedBoatId === args.boatId) {
+      await ctx.db.patch(userSettings._id, { selectedBoatId: undefined });
+    }
+  },
+});

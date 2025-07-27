@@ -23,6 +23,7 @@ export default function App() {
   // Boat management
   const userBoats = useQuery(api.boats.getUserBoats);
   const selectedBoat = useQuery(api.boats.getSelectedBoat);
+  const pendingInvites = useQuery(api.boats.getPendingInvites);
   const selectBoat = useMutation(api.boats.selectBoat);
   const createBoat = useMutation(api.boats.createBoat);
   
@@ -90,7 +91,7 @@ export default function App() {
     <div className={`min-h-screen flex flex-col transition-colors ${
       userTheme === 'dark' ? 'dark bg-gray-900' : 'bg-gray-50'
     }`}>
-      <header className={`sticky top-0 z-10 backdrop-blur-sm h-16 flex justify-between items-center border-b shadow-sm px-4 transition-colors ${
+      <header className={`sticky top-0 z-30 backdrop-blur-sm h-16 flex justify-between items-center border-b shadow-sm px-4 transition-colors ${
         userTheme === 'dark' ? 'bg-gray-800/80 border-gray-700' : 'bg-white/80 border-gray-200'
       }`}>
         <div className="flex items-center gap-2">
@@ -105,14 +106,19 @@ export default function App() {
               <div className="relative" data-boat-dropdown>
                 <button
                   onClick={() => setShowBoatDropdown(!showBoatDropdown)}
-                  className="flex items-center gap-2 bg-cyan-50 dark:bg-cyan-900/30 rounded px-3 py-2 border border-cyan-200 dark:border-cyan-700 hover:bg-cyan-100 dark:hover:bg-cyan-800/50 transition-colors text-sm"
+                  className="flex items-center gap-2 bg-cyan-50 dark:bg-cyan-900/30 rounded px-3 py-2 border border-cyan-200 dark:border-cyan-700 hover:bg-cyan-100 dark:hover:bg-cyan-800/50 transition-colors text-sm relative"
                 >
                   <span className="text-sm text-gray-700 dark:text-gray-300">🚤 {selectedBoat?.name || 'No boat selected'}</span>
                   <span className="text-xs">▼</span>
+                  {pendingInvites && pendingInvites.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
+                      {pendingInvites.length}
+                    </span>
+                  )}
                 </button>
                 
                 {showBoatDropdown && (
-                  <div className="absolute top-full mt-1 right-0 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 min-w-48 z-20">
+                  <div className="absolute top-full mt-1 right-0 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg py-1 min-w-48 z-40">
                     {userBoats?.map((boat) => (
                       <button
                         key={boat._id}
@@ -140,17 +146,20 @@ export default function App() {
                       ➕ Create new boat
                     </button>
                     
-                    {selectedBoat && (
-                      <button
-                        onClick={() => {
-                          setShowBoatSettings(true);
-                          setShowBoatDropdown(false);
-                        }}
-                        className="w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-                      >
-                        ⚙️ Boat settings & sharing
-                      </button>
-                    )}
+                    <button
+                      onClick={() => {
+                        setShowBoatSettings(true);
+                        setShowBoatDropdown(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors flex items-center justify-between"
+                    >
+                      <span>⚙️ Boat settings & sharing</span>
+                      {pendingInvites && pendingInvites.length > 0 && (
+                        <span className="bg-red-500 text-white text-xs rounded-full h-4 w-4 flex items-center justify-center font-medium">
+                          {pendingInvites.length}
+                        </span>
+                      )}
+                    </button>
                   </div>
                 )}
               </div>
