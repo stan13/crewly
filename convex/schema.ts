@@ -56,7 +56,11 @@ const applicationTables = {
     date: v.string(), // YYYY-MM-DD format
     startTime: v.string(), // HH:MM format
     endTime: v.string(), // HH:MM format
-    contactIds: v.array(v.id("contacts")),
+    crew: v.array(v.object({
+      contactId: v.id("contacts"),
+      status: v.union(v.literal("confirmed"), v.literal("declined"), v.literal("pending")),
+      confirmedAt: v.optional(v.number()),
+    })),
     boatId: v.id("boats"),
     createdBy: v.id("users"),
   })

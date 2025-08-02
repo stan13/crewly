@@ -2,6 +2,7 @@ import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Id } from "../convex/_generated/dataModel";
 import { useState, useEffect } from "react";
+import { CrewConfirmation } from "./CrewConfirmation";
 
 interface Contact {
   _id: Id<"contacts">;
@@ -47,7 +48,7 @@ export function CalendarGrid({
   // Filter contacts based on search term and exclude already added contacts
   const getFilteredContacts = (dateString: string) => {
     const session = getSessionForDate(dateString);
-    const addedContactIds = session?.contactIds || [];
+    const addedContactIds = session?.crew?.map((c: any) => c.contactId) || [];
     
     return contacts
       .filter(contact => 
@@ -56,6 +57,7 @@ export function CalendarGrid({
       )
       .slice(0, 5); // Limit to 5 results
   };
+
 
   // Handle click on day to start autocomplete
   const handleDayClick = (dateString: string, e: React.MouseEvent) => {
@@ -373,10 +375,12 @@ export function CalendarGrid({
               </div>
               
               {/* Person count in center */}
-              {session && session.contactIds.length > 0 && (
+              {session && session.crew.length > 0 && (
                 <div className="flex items-center gap-1">
                   <span className="text-xs">👤</span>
-                  <span className="text-xs font-medium text-gray-600 dark:text-gray-300">{session.contactIds.length}</span>
+                  <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                    {`${session.crew.filter((member: any) => member.status === 'confirmed').length}/${session.crew.length}`}
+                  </span>
                 </div>
               )}
               
@@ -390,13 +394,13 @@ export function CalendarGrid({
               </div>
             </div>
             
-            {session && session.contactIds.length > 0 && (
+            {session && session.crew.length > 0 && (
               <div className="space-y-2 relative z-10">
                 {/* Time Range Input */}
                 <div className="text-xs">
                   <input
                     type="text"
-                    placeholder="9am - 5pm"
+                    placeholder={isWeekend ? "12pm - 6pm" : "5pm - 8pm"}
                     defaultValue={session.startTime && session.endTime ? formatTimeRange(session.startTime, session.endTime) : ''}
                     onChange={() => {
                       // Time input formatting handled by parent component
@@ -408,37 +412,32 @@ export function CalendarGrid({
                         e.currentTarget.blur();
                       }
                     }}
-                    className="w-24 px-1 py-0.5 border border-gray-300 dark:border-gray-600 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                    className="w-full px-1 py-0.5 border border-gray-300 dark:border-gray-600 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
                   />
                 </div>
                 
-                {/* Invited Contacts */}
+                {/* Crew Members with Confirmation Status */}
                 <div className="space-y-1">
-                  {session.contactIds.map((contactId: Id<"contacts">) => {
-                    const contact = contacts.find(c => c._id === contactId);
-                    if (!contact) return null;
+                  {session.crew.map((crewMember: any) => {
+                    const crewMemberWithContact = {
+                      ...crewMember,
+                      contact: contacts.find(c => c._id === crewMember.contactId) || null
+                    };
                     return (
-                      <div
-                        key={contactId}
-                        draggable
-                        onDragStart={() => onDragStart(contactId, dateString)}
-                        className="contact-item flex justify-between items-center bg-gradient-to-r from-blue-100 to-cyan-100 dark:from-blue-900/50 dark:to-cyan-900/50 text-blue-800 dark:text-blue-200 px-2 py-1 rounded-lg text-xs group cursor-move hover:from-blue-200 hover:to-cyan-200 dark:hover:from-blue-800/70 dark:hover:to-cyan-800/70 transition-all duration-200 hover:scale-105 shadow-sm border border-blue-200 dark:border-blue-700"
-                      >
-                        <span className="truncate">{contact.name}</span>
-                        <button
-                          onClick={() => handleRemoveFromSession(dateString, contactId)}
-                          className="opacity-0 group-hover:opacity-100 text-blue-600 dark:text-blue-300 hover:text-blue-800 dark:hover:text-blue-100 ml-1"
-                        >
-                          ×
-                        </button>
-                      </div>
+                      <CrewConfirmation
+                        key={crewMember.contactId}
+                        date={dateString}
+                        crewMember={crewMemberWithContact}
+                        onDragStart={onDragStart}
+                        onRemove={handleRemoveFromSession}
+                      />
                     );
                   })}
                 </div>
               </div>
             )}
             
-            {((!session) || (session && session.contactIds.length === 0)) && activeDate !== dateString && (
+            {(!session || session.crew.length === 0) && activeDate !== dateString && (
               <div className="text-xs text-gray-400 dark:text-gray-500 text-center mt-4 flex flex-col items-center gap-1">
                 <div className="text-lg">⛵</div>
                 <div>Click to add sailors</div>
