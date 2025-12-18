@@ -3,15 +3,12 @@ import { useState } from "react";
 // Better reverse geocoding function
 async function reverseGeocodeBetter(lat: number, lon: number): Promise<string> {
   try {
-    // Use a free geocoding service that doesn't require API keys
     const response = await fetch(
       `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${lat}&longitude=${lon}&localityLanguage=en`
     );
-    
+
     if (response.ok) {
       const data = await response.json();
-      console.log('Reverse geocoding result:', data);
-      
       if (data.city && data.principalSubdivisionCode) {
         return `${data.city}, ${data.principalSubdivisionCode}`;
       } else if (data.locality && data.principalSubdivisionCode) {
@@ -20,10 +17,7 @@ async function reverseGeocodeBetter(lat: number, lon: number): Promise<string> {
         return data.city;
       }
     }
-    
-    // Fallback to coordinates if service fails
     return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
-    
   } catch (error) {
     console.error('Reverse geocoding error:', error);
     return `${lat.toFixed(4)}, ${lon.toFixed(4)}`;
@@ -43,11 +37,11 @@ interface WeatherLocationModalProps {
   onClose: () => void;
 }
 
-export function WeatherLocationModal({ 
-  isOpen, 
-  currentLocation, 
-  onSave, 
-  onClose 
+export function WeatherLocationModal({
+  isOpen,
+  currentLocation,
+  onSave,
+  onClose
 }: WeatherLocationModalProps) {
   const [locationInput, setLocationInput] = useState(currentLocation?.name || '');
   const [isGeocoding, setIsGeocoding] = useState(false);
@@ -69,34 +63,21 @@ export function WeatherLocationModal({
         navigator.geolocation.getCurrentPosition(resolve, reject, {
           enableHighAccuracy: true,
           timeout: 10000,
-          maximumAge: 300000 // 5 minutes
+          maximumAge: 300000
         });
       });
 
       const { latitude, longitude } = position.coords;
-      console.log('Got coordinates:', { latitude, longitude });
-      
-      // Use browser's built-in reverse geocoding (more accurate)
+
       try {
-        // Try using browser's built-in reverse geocoding if available
-        if ('geolocation' in navigator && 'geocoder' in window) {
-          // This would use Google's geocoding, but it's not always available
-        }
-        
-        // For now, let's use a more accurate free service or just use coordinates
-        // You could also create a Convex action for reverse geocoding
-        
-        // Try using a different geocoding service or create a simple city lookup
         const locationName = await reverseGeocodeBetter(latitude, longitude);
         onSave({ name: locationName, latitude, longitude });
-        
       } catch (error) {
         console.error('Reverse geocoding failed:', error);
-        // Fallback to coordinates
-        onSave({ 
-          name: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`, 
-          latitude, 
-          longitude 
+        onSave({
+          name: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
+          latitude,
+          longitude
         });
       }
     } catch (error) {
@@ -114,66 +95,50 @@ export function WeatherLocationModal({
     setError('');
 
     try {
-      // Try different location formats for better success
       const baseLocation = locationInput.trim();
       const locationVariants = [
         baseLocation,
-        baseLocation.replace(', ', ','), // Remove spaces after commas
-        baseLocation + ', US', // Add country
+        baseLocation.replace(', ', ','),
+        baseLocation + ', US',
         baseLocation + ', United States',
-        baseLocation + ', WA, US', // Add state if it's a city
-        baseLocation + ', Washington, US',
-        baseLocation + ', CA, US', // Common states
-        baseLocation + ', California, US',
-        baseLocation + ', NY, US',
-        baseLocation + ', New York, US',
       ];
-      
-      console.log('Trying location variants:', locationVariants);
 
-      // Try using a free geocoding service first
       let found = false;
-      
+
       for (const variant of locationVariants) {
         try {
-          // Use OpenStreetMap Nominatim (free, no API key required)
           const response = await fetch(
             `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(variant)}&limit=1&addressdetails=1`
           );
-          
+
           if (response.ok) {
             const data = await response.json();
-            console.log('Geocoding response for', variant, ':', data);
-            
+
             if (data && data.length > 0) {
               const location = data[0];
-              
-              // Better location name formatting
+
               let locationName = '';
               if (location.address) {
                 const addr = location.address;
                 const city = addr.city || addr.town || addr.village || addr.hamlet;
                 const state = addr.state;
                 const country = addr.country;
-                
+
                 if (city && state) {
                   locationName = `${city}, ${state}`;
                 } else if (city && country) {
                   locationName = `${city}, ${country}`;
                 } else {
-                  // Fallback to display name parsing
                   locationName = location.display_name.split(',').slice(0, 2).join(',').trim();
                 }
               } else {
                 locationName = location.display_name.split(',').slice(0, 2).join(',').trim();
               }
-              
-              console.log('Formatted location name:', locationName);
-              
-              onSave({ 
-                name: locationName, 
-                latitude: parseFloat(location.lat), 
-                longitude: parseFloat(location.lon) 
+
+              onSave({
+                name: locationName,
+                latitude: parseFloat(location.lat),
+                longitude: parseFloat(location.lon)
               });
               found = true;
               break;
@@ -184,9 +149,9 @@ export function WeatherLocationModal({
           continue;
         }
       }
-      
+
       if (!found) {
-        setError(`Location "${locationInput}" not found. Try formats like:\n• "Seattle, WA"\n• "Miami, FL"\n• "New York, NY"\n• "123 Main St, Seattle, WA"`);
+        setError(`Location "${locationInput}" not found. Try "City, State" format.`);
       }
     } catch (error) {
       setError('Error finding location. Please try again.');
@@ -196,62 +161,96 @@ export function WeatherLocationModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg p-6 w-96">
-        <h3 className="text-lg font-semibold mb-4">Set Weather Location</h3>
-        
+    <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+      <div className="modal-content p-6 w-[420px] max-w-[90vw]">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-10 h-10 rounded-xl bg-ocean-100 dark:bg-ocean-900/30 flex items-center justify-center">
+            <svg className="w-5 h-5 text-ocean-600 dark:text-ocean-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+              Weather Location
+            </h3>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Set your location for weather forecasts</p>
+          </div>
+        </div>
+
+        {/* Error message */}
         {error && (
-          <div className="mb-4 p-3 bg-red-100 border border-red-400 text-red-700 rounded">
-            {error}
+          <div className="mb-4 p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800/50">
+            <p className="text-sm text-red-700 dark:text-red-300">{error}</p>
           </div>
         )}
-        
+
         <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            value={locationInput}
-            onChange={(e) => setLocationInput(e.target.value)}
-            placeholder="Enter city, state, or address (e.g., Seattle, WA)"
-            className="w-full px-3 py-2 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            autoFocus
-            disabled={isGeocoding}
-          />
-          
+          {/* Location input */}
           <div className="mb-4">
-            <button
-              type="button"
-              onClick={handleUseCurrentLocation}
+            <label htmlFor="location" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+              Location
+            </label>
+            <input
+              id="location"
+              type="text"
+              value={locationInput}
+              onChange={(e) => setLocationInput(e.target.value)}
+              placeholder="e.g., Seattle, WA"
+              className="input-field"
+              autoFocus
               disabled={isGeocoding}
-              className="w-full px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {isGeocoding ? (
-                <>
-                  <span className="animate-spin">⚙️</span>
-                  Getting location...
-                </>
-              ) : (
-                <>
-                  📍 Use Current Location
-                </>
-              )}
-            </button>
+            />
           </div>
-          
-          <div className="flex gap-2 justify-end">
+
+          {/* Current location button */}
+          <button
+            type="button"
+            onClick={handleUseCurrentLocation}
+            disabled={isGeocoding}
+            className="w-full mb-4 flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg
+              bg-emerald-50 dark:bg-emerald-900/20
+              border border-emerald-200 dark:border-emerald-800/50
+              text-emerald-700 dark:text-emerald-300 font-medium
+              hover:bg-emerald-100 dark:hover:bg-emerald-900/30
+              disabled:opacity-50 disabled:cursor-not-allowed
+              transition-colors"
+          >
+            {isGeocoding ? (
+              <>
+                <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Getting location...
+              </>
+            ) : (
+              <>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Use Current Location
+              </>
+            )}
+          </button>
+
+          {/* Action buttons */}
+          <div className="flex gap-3 justify-end">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-gray-600 hover:text-gray-800"
               disabled={isGeocoding}
+              className="btn-ghost"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={isGeocoding || !locationInput.trim()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary"
             >
-              {isGeocoding ? 'Finding...' : 'Save'}
+              {isGeocoding ? 'Finding...' : 'Save Location'}
             </button>
           </div>
         </form>

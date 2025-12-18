@@ -49,13 +49,13 @@ export function CalendarGrid({
   const getFilteredContacts = (dateString: string) => {
     const session = getSessionForDate(dateString);
     const addedContactIds = session?.crew?.map((c: any) => c.contactId) || [];
-    
+
     return contacts
-      .filter(contact => 
+      .filter(contact =>
         !addedContactIds.includes(contact._id) &&
         contact.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
-      .slice(0, 5); // Limit to 5 results
+      .slice(0, 5);
   };
 
 
@@ -63,14 +63,13 @@ export function CalendarGrid({
   const handleDayClick = (dateString: string, e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    
+
     // Don't activate if clicking on interactive elements
     const target = e.target as HTMLElement;
     if (target.closest('input, button, .contact-item') || target.tagName === 'INPUT' || target.tagName === 'BUTTON') {
       return;
     }
-    
-    console.log('Day clicked:', dateString); // Debug log
+
     setActiveDate(dateString);
     setSearchTerm("");
     setSelectedIndex(0);
@@ -79,7 +78,7 @@ export function CalendarGrid({
   // Handle autocomplete input
   const handleAutocompleteKeyDown = (e: React.KeyboardEvent, dateString: string) => {
     const filteredContacts = getFilteredContacts(dateString);
-    
+
     if (e.key === 'Escape') {
       setActiveDate(null);
       setSearchTerm("");
@@ -101,7 +100,6 @@ export function CalendarGrid({
   const handleAddContact = async (dateString: string, contactId: Id<"contacts">) => {
     try {
       await addContact({ date: dateString, contactId });
-      // Keep the autocomplete active, just clear the search term
       setSearchTerm("");
       setSelectedIndex(0);
     } catch (error) {
@@ -115,7 +113,7 @@ export function CalendarGrid({
       setActiveDate(null);
       setSearchTerm("");
     };
-    
+
     if (activeDate) {
       document.addEventListener('click', handleClickOutside);
       return () => document.removeEventListener('click', handleClickOutside);
@@ -125,46 +123,45 @@ export function CalendarGrid({
   // Function to get weather-based background color
   const getWeatherBackgroundColor = (weather: any, temperatureUnit: string): string => {
     if (!weather || weather.error) return 'bg-white dark:bg-gray-800';
-    
+
     const temp = weather.high;
     const condition = weather.condition?.toLowerCase() || '';
-    
-    // Temperature-based colors (pale theme)
-    const tempThreshold = temperatureUnit === 'celsius' ? 
-      { hot: 32, warm: 24, cool: 10, cold: 0 } : 
+
+    // Temperature thresholds
+    const tempThreshold = temperatureUnit === 'celsius' ?
+      { hot: 32, warm: 24, cool: 10, cold: 0 } :
       { hot: 90, warm: 75, cool: 50, cold: 32 };
-    
-    // Condition-based colors (overrides temperature in some cases)
+
+    // Condition-based colors (overrides temperature)
     if (condition.includes('rain') || condition.includes('shower')) {
-      return 'bg-slate-100 dark:bg-slate-800'; // Pale blue-gray for rain
+      return 'bg-slate-50 dark:bg-slate-800/50';
     }
     if (condition.includes('thunderstorm') || condition.includes('storm')) {
-      return 'bg-slate-200 dark:bg-slate-700'; // Darker gray for storms
+      return 'bg-slate-100 dark:bg-slate-800';
     }
     if (condition.includes('snow') || condition.includes('blizzard')) {
-      return 'bg-blue-50 dark:bg-blue-900/30'; // Very pale blue for snow
+      return 'bg-blue-50/50 dark:bg-blue-900/20';
     }
     if (condition.includes('fog') || condition.includes('mist') || condition.includes('haze')) {
-      return 'bg-gray-100 dark:bg-gray-700'; // Light gray for fog
+      return 'bg-gray-50 dark:bg-gray-800';
     }
     if (condition.includes('cloudy')) {
-      return 'bg-gray-50 dark:bg-gray-800'; // Very pale gray for clouds
+      return 'bg-gray-50/50 dark:bg-gray-800';
     }
-    
+
     // Temperature-based colors for clear/sunny days
     if (temp >= tempThreshold.hot) {
-      return 'bg-red-50 dark:bg-red-900/30'; // Pale red for very hot
+      return 'bg-amber-50/60 dark:bg-amber-900/20';
     } else if (temp >= tempThreshold.warm) {
-      return 'bg-yellow-50 dark:bg-yellow-900/30'; // Pale yellow for warm/sunny
+      return 'bg-yellow-50/50 dark:bg-yellow-900/20';
     } else if (temp >= tempThreshold.cool) {
-      return 'bg-green-50 dark:bg-green-900/30'; // Pale green for mild
+      return 'bg-emerald-50/50 dark:bg-emerald-900/20';
     } else {
-      return 'bg-blue-100 dark:bg-blue-900/40'; // Pale blue for cold
+      return 'bg-sky-50/50 dark:bg-sky-900/20';
     }
   };
 
   const formatDate = (date: Date) => {
-    // Use local timezone to avoid date shifts
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
@@ -180,27 +177,23 @@ export function CalendarGrid({
   };
 
   const parseTimeRange = (input: string): { startTime: string; endTime: string } | null => {
-    // Remove extra spaces and convert to lowercase
     const cleaned = input.replace(/\s+/g, '').toLowerCase();
-    
-    // Try to match patterns like "9am-5pm", "9:30am-5:30pm", etc.
     const match = cleaned.match(/^(\d{1,2})(:(\d{2}))?(am|pm)-(\d{1,2})(:(\d{2}))?(am|pm)$/);
-    
+
     if (!match) return null;
-    
+
     const [, startHour, , startMin = '00', startAmPm, endHour, , endMin = '00', endAmPm] = match;
-    
-    // Convert 12-hour to 24-hour format
+
     const convertTo24Hour = (hour: string, minute: string, ampm: string) => {
       let h = parseInt(hour);
       const m = parseInt(minute);
-      
+
       if (ampm === 'am' && h === 12) h = 0;
       else if (ampm === 'pm' && h !== 12) h += 12;
-      
+
       return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
     };
-    
+
     return {
       startTime: convertTo24Hour(startHour, startMin, startAmPm),
       endTime: convertTo24Hour(endHour, endMin, endAmPm)
@@ -215,7 +208,7 @@ export function CalendarGrid({
       const ampm = h < 12 ? 'am' : 'pm';
       return minute === '00' ? `${displayHour}${ampm}` : `${displayHour}:${minute}${ampm}`;
     };
-    
+
     return `${formatTime(startTime)} - ${formatTime(endTime)}`;
   };
 
@@ -226,35 +219,25 @@ export function CalendarGrid({
     }
   };
 
-  // Weather functionality now handled by Convex backend batch action
+  // Weather functionality
   const [weatherData, setWeatherData] = useState<Record<string, any>>({});
   const [weatherLoading, setWeatherLoading] = useState(false);
   const getWeatherBatch = useAction(api.weather.getWeatherBatch);
 
-  // Load weather data for all dates when location or dates change
   useEffect(() => {
     const loadWeatherBatch = async () => {
       if (weatherLoading) return;
-      
+
       const dateStrings = dates.map(formatDate);
       const cacheKey = `${weatherLocation.name}-${temperatureUnit}-${dateStrings[0]}-${dateStrings[dateStrings.length - 1]}`;
-      
-      // Check if we already have data for this date range
+
       if (weatherData[cacheKey]) {
         return;
       }
-      
+
       setWeatherLoading(true);
-      
+
       try {
-        console.log('Fetching weather batch with:', {
-          latitude: weatherLocation.latitude,
-          longitude: weatherLocation.longitude,
-          locationName: weatherLocation.name,
-          dates: dateStrings,
-          cacheKey
-        });
-        
         const batchResults = await getWeatherBatch({
           latitude: weatherLocation.latitude,
           longitude: weatherLocation.longitude,
@@ -262,79 +245,64 @@ export function CalendarGrid({
           dates: dateStrings,
           temperatureUnit: temperatureUnit as 'fahrenheit' | 'celsius'
         });
-        
-        console.log('Weather batch results received:', batchResults);
-        setWeatherData(prev => {
-          const newData = { ...prev, [cacheKey]: batchResults };
-          console.log('Updated weather data cache:', Object.keys(newData));
-          return newData;
-        });
+
+        setWeatherData(prev => ({ ...prev, [cacheKey]: batchResults }));
       } catch (error) {
         console.error('Weather batch fetch error:', error);
       } finally {
         setWeatherLoading(false);
       }
     };
-    
+
     loadWeatherBatch();
   }, [weatherLocation, dates[0]?.getTime(), dates[dates.length - 1]?.getTime(), temperatureUnit]);
 
   // Weather component for each day
   const WeatherDisplay = ({ date }: { date: Date }) => {
     const dateString = formatDate(date);
-    
-    // Find weather data from the batch results
     const dateStrings = dates.map(formatDate);
     const cacheKey = `${weatherLocation.name}-${temperatureUnit}-${dateStrings[0]}-${dateStrings[dateStrings.length - 1]}`;
     const batchData = weatherData[cacheKey];
     const weather = batchData?.[dateString];
-    
-    // Debug logging
-    console.log('WeatherDisplay debug:', {
-      dateString,
-      cacheKey,
-      hasBatchData: !!batchData,
-      hasWeather: !!weather,
-      weatherLoading,
-      allCacheKeys: Object.keys(weatherData)
-    });
 
     if (weatherLoading && !weather) {
-      console.log('Showing loading for', dateString);
       return (
-        <div className="text-xs text-gray-400 flex items-center gap-1">
-          <span>⏳</span>
+        <div className="text-xs text-gray-300 dark:text-gray-600">
+          <div className="w-4 h-4 rounded-full border-2 border-gray-200 border-t-gray-400 animate-spin"></div>
         </div>
       );
     }
 
-    // Don't show anything if there's no weather data or if it's fallback/error data
     if (!weather || weather.error || weather.condition === 'Data unavailable') {
-      console.log('No weather data or error for', dateString, weather?.error || 'no data');
       return null;
     }
-    
-    console.log('Rendering weather for', dateString, weather);
 
     return (
-      <div className="text-xs text-gray-400 flex items-center gap-1 group">
-        <span className="group-hover:animate-spin">{weather.icon}</span>
-        <span className="font-medium">{weather.high}°/{weather.low}°</span>
-        {weather.error && (
-          <span className="text-red-400" title={weather.error}>⚠️</span>
-        )}
+      <div className="flex items-center gap-1.5 text-xs text-gray-500 dark:text-gray-400">
+        <span className="text-sm">{weather.icon}</span>
+        <span className="font-medium tabular-nums">{weather.high}°</span>
+        <span className="text-gray-400 dark:text-gray-500">/</span>
+        <span className="tabular-nums">{weather.low}°</span>
       </div>
     );
   };
+
   return (
-    <div className="grid grid-cols-7 gap-4">
+    <div className="grid grid-cols-7 gap-3">
       {/* Calendar Headers */}
-      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
-        <div key={day} className="text-center font-semibold text-gray-600 dark:text-gray-400 py-2">
+      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
+        <div
+          key={day}
+          className={`text-center text-sm font-medium py-3 rounded-lg ${
+            index === 0 || index === 6
+              ? 'text-ocean-600 dark:text-ocean-400 bg-ocean-50/50 dark:bg-ocean-900/20'
+              : 'text-gray-600 dark:text-gray-400'
+          }`}
+        >
           {day}
         </div>
       ))}
-      
+
       {/* Calendar Days */}
       {dates.map((date) => {
         const dateString = formatDate(date);
@@ -342,81 +310,96 @@ export function CalendarGrid({
         const isToday = dateString === formatDate(new Date());
         const isPast = date < new Date(new Date().setHours(0, 0, 0, 0));
         const isWeekend = date.getDay() === 0 || date.getDay() === 6;
-        
+
         // Get weather data for background color
         const dateStrings = dates.map(formatDate);
         const cacheKey = `${weatherLocation.name}-${temperatureUnit}-${dateStrings[0]}-${dateStrings[dateStrings.length - 1]}`;
         const batchData = weatherData[cacheKey];
         const weather = batchData?.[dateString];
         const weatherBg = getWeatherBackgroundColor(weather, temperatureUnit);
-        
+
         return (
           <div
             key={dateString}
             onDragOver={onDragOver}
             onDrop={(e) => onDrop(e, dateString)}
             onClick={(e) => handleDayClick(dateString, e)}
-            className={`min-h-32 p-2 border-2 border-dashed rounded-lg transition-all duration-200 cursor-pointer ${
-              weather ? `${weatherBg} border-blue-200 dark:border-gray-600` :
-              'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600'
-            } hover:border-blue-400 dark:hover:border-gray-500 hover:shadow-lg hover:scale-[1.02] ${
-              isToday ? 'ring-2 ring-blue-500 dark:ring-blue-400 border-blue-400 dark:border-gray-500' : ''
+            className={`min-h-36 p-3 rounded-xl border transition-all duration-200 cursor-pointer group ${
+              weather
+                ? `${weatherBg} border-gray-100 dark:border-gray-700/50`
+                : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700/50'
             } ${
-              activeDate === dateString ? 'ring-2 ring-green-500 dark:ring-green-400 border-green-400 dark:border-gray-500' : ''
-            } hover:ring-1 hover:ring-green-300 dark:hover:ring-green-400`}
+              isToday
+                ? 'ring-2 ring-ocean-400 dark:ring-ocean-500 border-ocean-200 dark:border-ocean-800 shadow-md shadow-ocean-100 dark:shadow-ocean-900/20'
+                : 'hover:border-ocean-200 dark:hover:border-ocean-800 hover:shadow-md'
+            } ${
+              activeDate === dateString
+                ? 'ring-2 ring-emerald-400 dark:ring-emerald-500 border-emerald-200 dark:border-emerald-800'
+                : ''
+            } ${
+              isPast && !isToday ? 'opacity-60' : ''
+            }`}
           >
-            
-            <div className="flex justify-between items-center mb-2 relative z-10">
-              <div className="flex items-center gap-1">
-                <span className={`text-sm font-medium ${isToday ? 'text-blue-600 dark:text-blue-400' : 'text-gray-600 dark:text-gray-300'}`}>
+            {/* Header row */}
+            <div className="flex justify-between items-start mb-2">
+              <div className="flex items-center gap-2">
+                <span className={`text-sm font-semibold ${
+                  isToday
+                    ? 'text-ocean-600 dark:text-ocean-400'
+                    : isWeekend
+                      ? 'text-gray-700 dark:text-gray-200'
+                      : 'text-gray-800 dark:text-gray-200'
+                }`}>
                   {date.getDate()}
                 </span>
-                {isWeekend && !isPast && <span className="text-xs">🌊</span>}
-              </div>
-              
-              {/* Person count in center */}
-              {session && session.crew.length > 0 && (
-                <div className="flex items-center gap-1">
-                  <span className="text-xs">👤</span>
-                  <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                    {`${session.crew.filter((member: any) => member.status === 'confirmed').length}/${session.crew.length}`}
-                  </span>
-                </div>
-              )}
-              
-              <div className="flex items-center gap-2">
                 {date.getDate() === 1 && (
-                  <span className="text-xs text-gray-400 dark:text-gray-500">
+                  <span className="text-xs font-medium text-gray-400 dark:text-gray-500">
                     {date.toLocaleDateString('en-US', { month: 'short' })}
                   </span>
+                )}
+              </div>
+
+              <div className="flex items-center gap-2">
+                {/* Crew count badge */}
+                {session && session.crew.length > 0 && (
+                  <div className="flex items-center gap-1 px-1.5 py-0.5 rounded-md bg-gray-100 dark:bg-gray-700">
+                    <svg className="w-3 h-3 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                      {session.crew.filter((m: any) => m.status === 'confirmed').length}/{session.crew.length}
+                    </span>
+                  </div>
                 )}
                 <WeatherDisplay date={date} />
               </div>
             </div>
-            
+
             {session && session.crew.length > 0 && (
-              <div className="space-y-2 relative z-10">
+              <div className="space-y-2">
                 {/* Time Range Input */}
-                <div className="text-xs">
-                  <input
-                    type="text"
-                    placeholder={isWeekend ? "12pm - 6pm" : "5pm - 8pm"}
-                    defaultValue={session.startTime && session.endTime ? formatTimeRange(session.startTime, session.endTime) : ''}
-                    onChange={() => {
-                      // Time input formatting handled by parent component
-                    }}
-                    onBlur={(e) => handleTimeRangeChange(dateString, e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleTimeRangeChange(dateString, e.currentTarget.value);
-                        e.currentTarget.blur();
-                      }
-                    }}
-                    className="w-full px-1 py-0.5 border border-gray-300 dark:border-gray-600 rounded text-xs focus:outline-none focus:ring-1 focus:ring-blue-500 dark:focus:ring-blue-400 text-center bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                  />
-                </div>
-                
-                {/* Crew Members with Confirmation Status */}
+                <input
+                  type="text"
+                  placeholder={isWeekend ? "12pm - 6pm" : "5pm - 8pm"}
+                  defaultValue={session.startTime && session.endTime ? formatTimeRange(session.startTime, session.endTime) : ''}
+                  onBlur={(e) => handleTimeRangeChange(dateString, e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleTimeRangeChange(dateString, e.currentTarget.value);
+                      e.currentTarget.blur();
+                    }
+                  }}
+                  className="w-full px-2 py-1 text-xs text-center rounded-md
+                    bg-white/60 dark:bg-gray-700/60
+                    border border-gray-200/50 dark:border-gray-600/50
+                    focus:border-ocean-300 dark:focus:border-ocean-600
+                    focus:ring-1 focus:ring-ocean-200 dark:focus:ring-ocean-800
+                    text-gray-700 dark:text-gray-300
+                    placeholder:text-gray-400 dark:placeholder:text-gray-500
+                    transition-colors"
+                />
+
+                {/* Crew Members */}
                 <div className="space-y-1">
                   {session.crew.map((crewMember: any) => {
                     const crewMemberWithContact = {
@@ -436,11 +419,13 @@ export function CalendarGrid({
                 </div>
               </div>
             )}
-            
+
             {(!session || session.crew.length === 0) && activeDate !== dateString && (
-              <div className="text-xs text-gray-400 dark:text-gray-500 text-center mt-4 flex flex-col items-center gap-1">
-                <div className="text-lg">⛵</div>
-                <div>Click to add sailors</div>
+              <div className="flex flex-col items-center justify-center h-16 text-gray-300 dark:text-gray-600 group-hover:text-gray-400 dark:group-hover:text-gray-500 transition-colors">
+                <svg className="w-5 h-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                <span className="text-xs">Add crew</span>
               </div>
             )}
 
@@ -449,33 +434,43 @@ export function CalendarGrid({
               <div className="relative mt-2" onClick={e => e.stopPropagation()}>
                 <input
                   type="text"
-                  placeholder="Search sailors..."
+                  placeholder="Search crew..."
                   value={searchTerm}
                   onChange={(e) => {
                     setSearchTerm(e.target.value);
                     setSelectedIndex(0);
                   }}
                   onKeyDown={(e) => handleAutocompleteKeyDown(e, dateString)}
-                  className="w-full px-2 py-1 border border-green-300 dark:border-green-600 rounded text-xs focus:outline-none focus:ring-1 focus:ring-green-500 dark:focus:ring-green-400 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                  className="w-full px-2.5 py-1.5 text-sm rounded-lg
+                    bg-white dark:bg-gray-700
+                    border border-emerald-300 dark:border-emerald-600
+                    focus:ring-2 focus:ring-emerald-200 dark:focus:ring-emerald-800
+                    text-gray-900 dark:text-gray-100
+                    placeholder:text-gray-400 dark:placeholder:text-gray-500"
                   autoFocus
                 />
-                
+
                 {/* Autocomplete Dropdown */}
-                {searchTerm && (
-                  <div className="absolute top-full mt-1 left-0 right-0 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded shadow-lg z-10 max-h-32 overflow-y-auto">
+                {(searchTerm || getFilteredContacts(dateString).length > 0) && (
+                  <div className="absolute top-full mt-1 left-0 right-0 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg z-20 max-h-32 overflow-y-auto">
                     {getFilteredContacts(dateString).map((contact, index) => (
                       <div
                         key={contact._id}
                         onClick={() => handleAddContact(dateString, contact._id)}
-                        className={`px-2 py-1 text-xs cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 ${
-                          index === selectedIndex ? 'bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'
+                        className={`px-3 py-2 text-sm cursor-pointer flex items-center gap-2 ${
+                          index === selectedIndex
+                            ? 'bg-ocean-50 dark:bg-ocean-900/30 text-ocean-700 dark:text-ocean-300'
+                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600'
                         }`}
                       >
+                        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-ocean-400 to-ocean-600 flex items-center justify-center text-white text-xs font-medium">
+                          {contact.name.charAt(0).toUpperCase()}
+                        </div>
                         {contact.name}
                       </div>
                     ))}
-                    {getFilteredContacts(dateString).length === 0 && (
-                      <div className="px-2 py-1 text-xs text-gray-400 dark:text-gray-500">No sailors found</div>
+                    {getFilteredContacts(dateString).length === 0 && searchTerm && (
+                      <div className="px-3 py-2 text-sm text-gray-400 dark:text-gray-500">No crew found</div>
                     )}
                   </div>
                 )}

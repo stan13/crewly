@@ -4,40 +4,211 @@
 
 :root {
   --color-light: #ffffff;
-  --color-dark: #171717;
+  --color-dark: #0f172a;
+  --gradient-ocean: linear-gradient(135deg, #0ea5e9 0%, #06b6d4 50%, #0891b2 100%);
+  --gradient-subtle: linear-gradient(135deg, #f0f9ff 0%, #e0f7fa 100%);
 }
 
-.accent-text {
-  @apply text-slate-600;
+/* Chillwave animation - animated wave icon
+   The trick: translateX moves the path left, while stroke-dashoffset
+   compensates to keep the visible segment stationary. The wave oscillates
+   in place. Based on h=45: translate 3 wavelengths (-67.5px), dashoffset -99
+   Shifted right 8px to hide the leading rounded cap */
+@keyframes chillwave {
+  0% {
+    stroke-dashoffset: 0;
+    transform: translate3d(-2.5px, 0, 0);
+  }
+  100% {
+    stroke-dashoffset: -99;
+    transform: translate3d(-70px, 0, 0);
+  }
 }
 
-body {
-  font-family:
-    "Inter Variable",
-    ui-sans-serif,
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    "Segoe UI",
-    Roboto,
-    "Helvetica Neue",
-    Arial,
-    "Noto Sans",
-    sans-serif,
-    "Apple Color Emoji",
-    "Segoe UI Emoji",
-    "Segoe UI Symbol",
-    "Noto Color Emoji";
-  color: var(--color-dark);
-  background: var(--color-light);
+.animate-chillwave {
+  animation: chillwave 4s linear infinite;
 }
 
-/* only use this to update the style of the auth input fields. use a different class for all other input fields */
-.auth-input-field {
-  @apply w-full px-4 py-3 rounded-container bg-white border border-gray-200 focus:border-primary focus:ring-1 focus:ring-primary outline-none transition-shadow shadow-sm hover:shadow;
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    font-family:
+      "Inter Variable",
+      ui-sans-serif,
+      system-ui,
+      -apple-system,
+      BlinkMacSystemFont,
+      "Segoe UI",
+      Roboto,
+      "Helvetica Neue",
+      Arial,
+      "Noto Sans",
+      sans-serif,
+      "Apple Color Emoji",
+      "Segoe UI Emoji",
+      "Segoe UI Symbol",
+      "Noto Color Emoji";
+    color: var(--color-dark);
+    background: var(--color-light);
+    letter-spacing: -0.011em;
+  }
+
+  /* Refined focus states */
+  *:focus-visible {
+    outline: 2px solid #0ea5e9;
+    outline-offset: 2px;
+  }
+
+  /* Better scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+
+  .dark ::-webkit-scrollbar-thumb {
+    background: #475569;
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: #64748b;
+  }
 }
 
-/* only use this to update the style of the auth buttons. use the button class for all other buttons */
-.auth-button {
-  @apply w-full px-4 py-3 rounded bg-primary text-white font-semibold hover:bg-primary-hover transition-colors shadow-sm hover:shadow disabled:opacity-50 disabled:cursor-not-allowed;
+@layer components {
+  /* Glass morphism card */
+  .glass-card {
+    @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-md border border-white/20 dark:border-gray-700/50;
+  }
+
+  /* Refined input styles */
+  .input-field {
+    @apply w-full px-4 py-3 rounded-lg bg-white dark:bg-gray-800
+           border border-gray-200 dark:border-gray-700
+           text-gray-900 dark:text-gray-100
+           placeholder:text-gray-400 dark:placeholder:text-gray-500
+           focus:border-ocean-400 dark:focus:border-ocean-500
+           focus:ring-2 focus:ring-ocean-400/20 dark:focus:ring-ocean-500/20
+           outline-none transition-all duration-200
+           hover:border-gray-300 dark:hover:border-gray-600;
+  }
+
+  /* Primary button */
+  .btn-primary {
+    @apply px-5 py-2.5 rounded-lg font-medium text-white
+           bg-gradient-to-r from-ocean-500 to-ocean-600
+           hover:from-ocean-600 hover:to-ocean-700
+           focus:ring-2 focus:ring-ocean-400/50 focus:ring-offset-2
+           dark:focus:ring-offset-gray-900
+           shadow-md hover:shadow-lg
+           transition-all duration-200
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-md;
+  }
+
+  /* Secondary button */
+  .btn-secondary {
+    @apply px-5 py-2.5 rounded-lg font-medium
+           text-gray-700 dark:text-gray-200
+           bg-gray-100 dark:bg-gray-800
+           hover:bg-gray-200 dark:hover:bg-gray-700
+           border border-gray-200 dark:border-gray-700
+           transition-all duration-200;
+  }
+
+  /* Ghost button */
+  .btn-ghost {
+    @apply px-4 py-2 rounded-lg font-medium
+           text-gray-600 dark:text-gray-300
+           hover:bg-gray-100 dark:hover:bg-gray-800
+           transition-all duration-200;
+  }
+
+  /* Card styles */
+  .card {
+    @apply bg-white dark:bg-gray-800 rounded-xl
+           border border-gray-100 dark:border-gray-700/50
+           shadow-sm hover:shadow-md transition-shadow duration-200;
+  }
+
+  /* Badge styles */
+  .badge {
+    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+
+  .badge-primary {
+    @apply badge bg-ocean-100 dark:bg-ocean-900/30 text-ocean-700 dark:text-ocean-300;
+  }
+
+  .badge-success {
+    @apply badge bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300;
+  }
+
+  .badge-warning {
+    @apply badge bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300;
+  }
+
+  .badge-danger {
+    @apply badge bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300;
+  }
+
+  /* Gradient text */
+  .text-gradient {
+    @apply bg-gradient-to-r from-ocean-600 via-cyan-500 to-ocean-600 bg-clip-text text-transparent;
+  }
+
+  /* Subtle hover lift effect */
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-0.5;
+  }
+
+  /* Modal overlay */
+  .modal-overlay {
+    @apply fixed inset-0 bg-gray-900/60 dark:bg-black/70 backdrop-blur-sm
+           flex items-center justify-center z-50;
+  }
+
+  /* Modal content */
+  .modal-content {
+    @apply bg-white dark:bg-gray-800 rounded-2xl shadow-2xl
+           border border-gray-100 dark:border-gray-700
+           animate-scale-in;
+  }
+}
+
+@layer utilities {
+  .accent-text {
+    @apply text-slate-600;
+  }
+
+  /* Smooth text rendering */
+  .smooth-text {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
 }
