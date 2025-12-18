@@ -192,27 +192,27 @@ export default function App() {
       userTheme === 'dark' ? 'dark bg-gray-900' : 'bg-slate-50'
     }`}>
       <Authenticated>
-      <header className={`sticky top-0 z-30 h-16 flex justify-between items-center border-b px-6 transition-all duration-300 ${
+      <header className={`sticky top-0 z-30 h-14 md:h-16 flex justify-between items-center border-b px-3 md:px-6 transition-all duration-300 ${
         userTheme === 'dark'
           ? 'bg-gray-900/95 backdrop-blur-md border-gray-800'
           : 'bg-white/95 backdrop-blur-md border-gray-200/80'
       }`}>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 md:gap-3">
           <div className="flex items-center gap-2">
-            <ChillwaveIcon size={32} className="shadow-md" />
-            <h2 className="text-xl font-semibold text-gradient">
+            <ChillwaveIcon size={28} className="shadow-md md:w-8 md:h-8" />
+            <h2 className="hidden sm:block text-xl font-semibold text-gradient">
               Crewly
             </h2>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1.5 md:gap-3">
           <Authenticated>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 md:gap-2">
               {/* Boat selector */}
               <div className="relative" data-boat-dropdown>
                 <button
                   onClick={() => setShowBoatDropdown(!showBoatDropdown)}
-                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative
+                  className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 relative
                     bg-ocean-50 dark:bg-ocean-900/20 text-ocean-700 dark:text-ocean-300
                     border border-ocean-200/50 dark:border-ocean-800/50
                     hover:bg-ocean-100 dark:hover:bg-ocean-900/30 hover:border-ocean-300 dark:hover:border-ocean-700"
@@ -220,7 +220,7 @@ export default function App() {
                   <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3 15l5.12-5.12A3 3 0 0110.24 9H13a2 2 0 012 2v2.76a3 3 0 01-.88 2.12L9 21" />
                   </svg>
-                  <span className="max-w-32 truncate">{selectedBoat?.name || 'Select boat'}</span>
+                  <span className="hidden sm:inline max-w-32 truncate">{selectedBoat?.name || 'Select boat'}</span>
                   <svg className="w-4 h-4 text-ocean-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
                   </svg>
@@ -232,7 +232,7 @@ export default function App() {
                 </button>
 
                 {showBoatDropdown && (
-                  <div className="absolute top-full mt-2 right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl py-2 min-w-52 z-40 animate-scale-in">
+                  <div className="absolute top-full mt-2 left-0 right-auto md:left-auto md:right-0 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl py-2 min-w-52 z-40 animate-scale-in">
                     <div className="px-3 py-1.5 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
                       Your Boats
                     </div>
@@ -300,7 +300,7 @@ export default function App() {
               {/* Location button */}
               <button
                 onClick={() => setShowLocationModal(true)}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
+                className="flex items-center gap-1.5 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg text-sm font-medium transition-all duration-200
                   bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300
                   border border-gray-200/50 dark:border-gray-700/50
                   hover:bg-gray-200 dark:hover:bg-gray-700"
@@ -316,7 +316,7 @@ export default function App() {
               {/* Temperature unit toggle */}
               <button
                 onClick={() => updateUserTemperatureUnit({ temperatureUnit: userTemperatureUnit === 'celsius' ? 'fahrenheit' : 'celsius' })}
-                className="flex items-center justify-center w-10 h-10 rounded-lg text-sm font-medium transition-all duration-200
+                className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-lg text-xs md:text-sm font-medium transition-all duration-200
                   bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300
                   border border-gray-200/50 dark:border-gray-700/50
                   hover:bg-gray-200 dark:hover:bg-gray-700"
@@ -328,18 +328,18 @@ export default function App() {
               {/* Dark mode toggle */}
               <button
                 onClick={() => updateUserTheme({ theme: userTheme === 'light' ? 'dark' : 'light' })}
-                className="flex items-center justify-center w-10 h-10 rounded-lg text-sm transition-all duration-200
+                className="flex items-center justify-center w-8 h-8 md:w-10 md:h-10 rounded-lg text-sm transition-all duration-200
                   bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300
                   border border-gray-200/50 dark:border-gray-700/50
                   hover:bg-gray-200 dark:hover:bg-gray-700"
                 title="Toggle dark mode"
               >
                 {userTheme === 'light' ? (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
                   </svg>
                 ) : (
-                  <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                     <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
                   </svg>
                 )}
@@ -597,6 +597,7 @@ function BoatCalendar({ weatherLocation, temperatureUnit }: { weatherLocation: {
 
   const [draggedContact, setDraggedContact] = useState<Id<"contacts"> | null>(null);
   const [draggedFromDate, setDraggedFromDate] = useState<string | null>(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   // New state for calendar window navigation
   const [windowStart, setWindowStart] = useState(() => {
     const today = new Date();
@@ -666,23 +667,49 @@ function BoatCalendar({ weatherLocation, temperatureUnit }: { weatherLocation: {
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)]">
-      <ContactSidebar onDragStart={handleDragStart} />
+    <div className="flex h-[calc(100vh-3.5rem)] md:h-[calc(100vh-4rem)]">
+      {/* Mobile sidebar overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - hidden on mobile, shown in drawer when open */}
+      <div className={`
+        fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out md:relative md:translate-x-0 md:z-auto
+        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+      `}>
+        <ContactSidebar onDragStart={handleDragStart} onClose={() => setSidebarOpen(false)} />
+      </div>
 
       {/* Calendar */}
-      <div className="flex-1 p-6 overflow-y-auto bg-slate-50/50 dark:bg-gray-900">
+      <div className="flex-1 p-4 md:p-6 overflow-y-auto bg-slate-50/50 dark:bg-gray-900">
         {/* Navigation and Month Label */}
-        <div className="flex items-center justify-between mb-6">
-          <button
-            onClick={handlePrev}
-            className="flex items-center justify-center w-10 h-10 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300 shadow-sm"
-            aria-label="Previous 4 weeks"
-          >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200">{monthLabel()}</h2>
+        <div className="flex items-center justify-between mb-4 md:mb-6">
+          <div className="flex items-center gap-2">
+            {/* Mobile menu button */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="flex md:hidden items-center justify-center w-10 h-10 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300 shadow-sm"
+              aria-label="Open crew sidebar"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </button>
+            <button
+              onClick={handlePrev}
+              className="flex items-center justify-center w-10 h-10 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300 shadow-sm"
+              aria-label="Previous 4 weeks"
+            >
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+              </svg>
+            </button>
+          </div>
+          <h2 className="text-base md:text-xl font-semibold text-gray-800 dark:text-gray-200">{monthLabel()}</h2>
           <button
             onClick={handleNext}
             className="flex items-center justify-center w-10 h-10 rounded-lg bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-gray-600 dark:text-gray-300 shadow-sm"

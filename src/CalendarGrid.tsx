@@ -287,13 +287,16 @@ export function CalendarGrid({
     );
   };
 
+  const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const dayNamesShort = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
   return (
-    <div className="grid grid-cols-7 gap-3">
-      {/* Calendar Headers */}
-      {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, index) => (
+    <div className="grid grid-cols-1 md:grid-cols-7 gap-2 md:gap-3">
+      {/* Calendar Headers - hidden on mobile */}
+      {dayNamesShort.map((day, index) => (
         <div
           key={day}
-          className={`text-center text-sm font-medium py-3 rounded-lg ${
+          className={`hidden md:block text-center text-sm font-medium py-3 rounded-lg ${
             index === 0 || index === 6
               ? 'text-ocean-600 dark:text-ocean-400 bg-ocean-50/50 dark:bg-ocean-900/20'
               : 'text-gray-600 dark:text-gray-400'
@@ -324,7 +327,7 @@ export function CalendarGrid({
             onDragOver={onDragOver}
             onDrop={(e) => onDrop(e, dateString)}
             onClick={(e) => handleDayClick(dateString, e)}
-            className={`min-h-36 p-3 rounded-xl border transition-all duration-200 cursor-pointer group ${
+            className={`min-h-24 md:min-h-36 p-2.5 md:p-3 rounded-xl border transition-all duration-200 cursor-pointer group ${
               weather
                 ? `${weatherBg} border-gray-100 dark:border-gray-700/50`
                 : 'bg-white dark:bg-gray-800 border-gray-100 dark:border-gray-700/50'
@@ -343,6 +346,12 @@ export function CalendarGrid({
             {/* Header row */}
             <div className="flex justify-between items-start mb-2">
               <div className="flex items-center gap-2">
+                {/* Day name shown on mobile only */}
+                <span className={`md:hidden text-xs font-medium ${
+                  isWeekend ? 'text-ocean-600 dark:text-ocean-400' : 'text-gray-500 dark:text-gray-400'
+                }`}>
+                  {dayNamesShort[date.getDay()]}
+                </span>
                 <span className={`text-sm font-semibold ${
                   isToday
                     ? 'text-ocean-600 dark:text-ocean-400'
@@ -421,8 +430,8 @@ export function CalendarGrid({
             )}
 
             {(!session || session.crew.length === 0) && activeDate !== dateString && (
-              <div className="flex flex-col items-center justify-center h-16 text-gray-300 dark:text-gray-600 group-hover:text-gray-400 dark:group-hover:text-gray-500 transition-colors">
-                <svg className="w-5 h-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <div className="flex flex-col items-center justify-center h-10 md:h-16 text-gray-300 dark:text-gray-600 group-hover:text-gray-400 dark:group-hover:text-gray-500 transition-colors">
+                <svg className="w-4 h-4 md:w-5 md:h-5 mb-0.5 md:mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
                 </svg>
                 <span className="text-xs">Add crew</span>

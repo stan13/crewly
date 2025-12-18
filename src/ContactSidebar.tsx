@@ -13,9 +13,10 @@ interface Contact {
 
 interface ContactSidebarProps {
   onDragStart: (contactId: Id<"contacts">, fromDate?: string) => void;
+  onClose?: () => void;
 }
 
-export function ContactSidebar({ onDragStart }: ContactSidebarProps) {
+export function ContactSidebar({ onDragStart, onClose }: ContactSidebarProps) {
   const contacts = useQuery(api.contacts.list) || [];
   const createContact = useMutation(api.contacts.create);
   const updateContact = useMutation(api.contacts.update);
@@ -90,9 +91,22 @@ export function ContactSidebar({ onDragStart }: ContactSidebarProps) {
             </div>
             <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Crew Members</h3>
           </div>
-          <span className="badge-primary">
-            {contacts.length}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="badge-primary">
+              {contacts.length}
+            </span>
+            {onClose && (
+              <button
+                onClick={onClose}
+                className="md:hidden p-1.5 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                aria-label="Close sidebar"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -208,9 +222,9 @@ export function ContactSidebar({ onDragStart }: ContactSidebarProps) {
         )}
       </div>
 
-      {/* Drag hint */}
+      {/* Drag hint - desktop only */}
       {contacts.length > 0 && (
-        <div className="p-4 border-t border-gray-100 dark:border-gray-700">
+        <div className="hidden md:block p-4 border-t border-gray-100 dark:border-gray-700">
           <p className="text-xs text-gray-400 dark:text-gray-500 text-center flex items-center justify-center gap-1.5">
             <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4" />
