@@ -455,19 +455,6 @@ export default function App() {
 }
 
 function Content({ weatherLocation, temperatureUnit }: { weatherLocation: { name: string; latitude: number; longitude: number }, temperatureUnit: string }) {
-  const loggedInUser = useQuery(api.auth.loggedInUser);
-
-  if (loggedInUser === undefined) {
-    return (
-      <div className="flex justify-center items-center h-96">
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-10 h-10 border-3 border-ocean-200 border-t-ocean-500 rounded-full animate-spin"></div>
-          <span className="text-sm text-gray-500 dark:text-gray-400">Loading...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className="h-full flex-1 flex flex-col">
       <Authenticated>
