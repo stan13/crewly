@@ -73,10 +73,10 @@ export function CrewConfirmation({ date, crewMember, onDragStart, onRemove }: Cr
     >
       <div className="flex items-center gap-2 flex-1 min-w-0">
         <div className={`w-1.5 h-1.5 rounded-full ${styles.dot} flex-shrink-0`}></div>
-        <span className="truncate font-medium">{crewMember.contact.name}</span>
+        <span className="truncate font-medium group-hover:max-w-[60px] transition-all duration-150">{crewMember.contact.name}</span>
       </div>
       {/* Action buttons - absolutely positioned to avoid layout shift */}
-      <div className="absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 bg-inherit rounded-md">
+      <div className={`absolute right-1 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-150 ${styles.bg} rounded-md pl-1`}>
         {crewMember.status !== "confirmed" && (
           <button
             onClick={(e) => {
